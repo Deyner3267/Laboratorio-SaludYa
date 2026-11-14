@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Informe de laboratorio: arquitectura hexagonal en SaludYa</title>
+  <style>
+    :root {
+      --ink: #1f2937;
+      --muted: #4b5563;
+      --line: #d1d5db;
+      --accent: #4338ca;
+      --accent-soft: #eef2ff;
+      --warn-soft: #fff7ed;
+      --warn-line: #f59e0b;
+      --code-bg: #f8fafc;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #f3f4f6;
+      color: var(--ink);
+      font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+      line-height: 1.65;
+    }
+
+    .page {
+      max-width: 1000px;
+      margin: 28px auto;
+      padding: 52px 60px;
+      background: #ffffff;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      border-radius: 10px;
+    }
+
+    .cover-page {
+      text-align: center;
+      padding: 40px 0 28px;
+      border-bottom: 2px solid var(--line);
+      margin-bottom: 42px;
+      page-break-after: always;
+    }
+
+    .cover-kicker {
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      line-height: 1.2;
+      margin: 0 0 10px;
+      color: #111827;
+    }
+
+    .cover-subtitle {
+      font-size: 1.25rem;
+      color: var(--muted);
+      margin: 0 0 38px;
+    }
+
+    .cover-data {
+      display: inline-block;
+      text-align: left;
+      min-width: 430px;
+      margin: 0 auto 30px;
+      padding: 22px 28px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fafafa;
+    }
+
+    .cover-data p {
+      margin: 10px 0;
+    }
+
+    .blank {
+      display: inline-block;
+      min-width: 250px;
+      border-bottom: 1px solid #6b7280;
+      height: 1.15em;
+    }
+
+    .cover-links {
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin-top: 22px;
+    }
+
+    .cover-links a { color: var(--accent); }
+
+    .toc {
+      margin: 0 0 38px;
+      padding: 20px 26px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--code-bg);
+    }
+
+    .toc h2 {
+      margin: 0 0 10px;
+      font-size: 1.05rem;
+    }
+
+    .toc ol {
+      margin: 0;
+      padding-left: 22px;
+      columns: 2;
+      column-gap: 36px;
+    }
+
+    .toc li { margin: 5px 0; }
+    .toc a { color: var(--accent); text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+
+    h2 {
+      font-size: 1.55rem;
+      margin: 42px 0 14px;
+      padding-bottom: 7px;
+      border-bottom: 1px solid var(--line);
+      color: #111827;
+      page-break-after: avoid;
+    }
+
+    h3 {
+      font-size: 1.15rem;
+      margin: 28px 0 10px;
+      color: #1e3a8a;
+      page-break-after: avoid;
+    }
+
+    p { margin: 10px 0; }
+
+    ul, ol { margin: 10px 0 10px 24px; padding: 0; }
+    li { margin: 5px 0; }
+
+    a { color: var(--accent); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 22px;
+      font-size: 0.94rem;
+      page-break-inside: avoid;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--accent-soft);
+      color: #1e1b4b;
+      font-weight: 700;
+    }
+
+    tbody tr:nth-child(even) { background: #fafafa; }
+
+    code {
+      font-family: Consolas, "Cascadia Code", "Courier New", monospace;
+      font-size: 0.9em;
+      background: var(--code-bg);
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      padding: 1px 5px;
+    }
+
+    pre {
+      background: var(--code-bg);
+      border: 1px solid #e5e7eb;
+      border-left: 4px solid var(--accent);
+      border-radius: 6px;
+      padding: 15px 18px;
+      overflow-x: auto;
+      line-height: 1.5;
+      page-break-inside: avoid;
+    }
+
+    pre code {
+      background: transparent;
+      border: 0;
+      padding: 0;
+      font-size: 0.88rem;
+    }
+
+    pre.diagram {
+      border-left-color: #0f766e;
+      color: #134e4a;
+      font-family: Consolas, "Cascadia Code", "Courier New", monospace;
+      font-size: 0.84rem;
+    }
+
+    blockquote {
+      margin: 16px 0;
+      padding: 12px 18px;
+      border-left: 4px solid var(--accent);
+      background: var(--accent-soft);
+      color: #312e81;
+    }
+
+    .note {
+      margin: 18px 0;
+      padding: 14px 18px;
+      border-left: 4px solid var(--warn-line);
+      background: var(--warn-soft);
+      color: #7c2d12;
+    }
+
+    .muted { color: var(--muted); }
+    .small { font-size: 0.9rem; }
+
+    .footer-note {
+      margin-top: 44px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 720px) {
+      .page { margin: 0; padding: 28px 20px; border-radius: 0; }
+      .cover-data { min-width: 0; width: 100%; }
+      .blank { min-width: 140px; }
+      .toc ol { columns: 1; }
+      table { font-size: 0.86rem; }
+      th, td { padding: 7px; }
+    }
+
+    @page {
+      size: A4;
+      margin: 18mm 20mm;
+    }
+
+    @media print {
+      body { background: #ffffff; }
+      .page {
+        max-width: none;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+        border-radius: 0;
+      }
+      .cover-page { page-break-after: always; }
+      h2, h3 { page-break-after: avoid; }
+      table, pre, tr, .note { page-break-inside: avoid; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="cover-page">
+      <div class="cover-kicker">Informe de laboratorio</div>
+      <h1>Arquitectura hexagonal en SaludYa</h1>
+      <p class="cover-subtitle">Agenda de citas, puertos, adaptadores y composición</p>
+
+      <div class="cover-data">
+        <p><strong>Institución:</strong> <span class="blank"></span></p>
+        <p><strong>Asignatura:</strong> <span class="blank"></span></p>
+        <p><strong>Fecha:</strong> <span class="blank"></span></p>
+        <p><strong>Grupo:</strong> 5</p>
+        <p><strong>Integrantes:</strong> Andrés Gómez, Deyner Ortiz y Juan Pablo Montez</p>
+      </div>
+
+      <p class="cover-links">
+        <strong>Repositorio:</strong> <a href="https://github.com/Deyner3267/Laboratorio-SaludYa">github.com/Deyner3267/Laboratorio-SaludYa</a><br>
+        <strong>Pull request:</strong> <a href="https://github.com/Deyner3267/Laboratorio-SaludYa/pull/1">github.com/Deyner3267/Laboratorio-SaludYa/pull/1</a><br>
+        <strong>Fecha de consulta:</strong> 14 de noviembre de 2026
+      </p>
+    </header>
+
+    <nav class="toc" aria-label="Contenido">
+      <h2>Contenido</h2>
+      <ol>
+        <li><a href="#portada">Portada</a></li>
+        <li><a href="#objetivo">Objetivo y alcance del laboratorio</a></li>
+        <li><a href="#arquitectura">Arquitectura hexagonal del proyecto</a></li>
+        <li><a href="#decisiones">Decisiones de arquitectura y justificación</a></li>
+        <li><a href="#funcionamiento">Funcionamiento de agendar y cancelar citas</a></li>
+        <li><a href="#comparacion">Comparación entre repositorios en memoria y JSON</a></li>
+        <li><a href="#verificacion">Verificación</a></li>
+        <li><a href="#revision">Revisión de código</a></li>
+        <li><a href="#conclusiones">Conclusiones y enlaces</a></li>
+      </ol>
+    </nav>
+
+    <section id="portada">
+      <h2>1. Portada</h2>
+      <p>Este informe documenta el laboratorio de arquitectura hexagonal aplicado a la agenda de citas de SaludYa. La portada deja espacios para que la institución, la asignatura y la fecha sean completados por el docente o por el grupo.</p>
+      <p>El trabajo se analiza a partir de dos referencias verificables:</p>
+      <ul>
+        <li>El repositorio público <code>Deyner3267/Laboratorio-SaludYa</code>.</li>
+        <li>El pull request número 1, titulado “Implementar agenda hexagonal de SaludYa”.</li>
+      </ul>
+      <p>El repositorio es material de práctica: no contiene una base de datos real, un servicio de correo real ni datos personales reales. La persistencia es en memoria o en un archivo JSON.</p>
+    </section>
+
+    <section id="objetivo">
+      <h2>2. Objetivo y alcance del laboratorio</h2>
+
+      <h3>2.1 Objetivo general</h3>
+      <p>Documentar y analizar la implementación de la agenda de citas de SaludYa con arquitectura hexagonal, identificando cómo se separan las reglas de negocio, los casos de uso, los puertos y los adaptadores, y cómo se comprueba el comportamiento del sistema.</p>
+
+      <h3>2.2 Objetivos específicos</h3>
+      <ol>
+        <li>Describir la estructura del dominio, la aplicación, los puertos, los adaptadores y la composición.</li>
+        <li>Explicar las decisiones de arquitectura visibles en el código y su relación con la regla de dependencia.</li>
+        <li>Detallar el funcionamiento de agendar y cancelar citas, incluida la regla que impide cruces de horarios.</li>
+        <li>Comparar los repositorios de agenda en memoria y en archivo JSON.</li>
+        <li>Presentar la verificación ejecutada con <code>npm test</code> y <code>npm run typecheck</code>.</li>
+        <li>Resumir los tres comentarios de revisión publicados en el pull request, sin atribuirlos a quien elabora este informe.</li>
+        <li>Registrar conclusiones y enlaces a las fuentes.</li>
+      </ol>
+
+      <h3>2.3 Alcance</h3>
+      <p>El alcance corresponde a la implementación de <code>src/</code> en la rama <code>feat/agenda-hexagonal</code>, junto con las pruebas y la documentación del repositorio. El lenguaje es TypeScript y el marco de pruebas es Vitest.</p>
+      <p>Quedan fuera del alcance:</p>
+      <ul>
+        <li>Una base de datos real o un servicio externo real.</li>
+        <li>Autenticación, autorización y gestión de usuarios.</li>
+        <li>Interfaz gráfica o aplicación móvil.</li>
+        <li>Envío real de correos o notificaciones.</li>
+        <li>Despliegue en producción, auditoría de seguridad o pruebas de carga.</li>
+        <li>Control de concurrencia o transacciones distribuidas.</li>
+      </ul>
+
+      <h3>2.4 Material base e implementación propuesta</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Elemento</th>
+            <th>Rama <code>main</code> (material base)</th>
+            <th>Rama <code>feat/agenda-hexagonal</code> (implementación propuesta)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>src/</code></td>
+            <td>No existe</td>
+            <td>Implementado: dominio, aplicación, infraestructura y composición</td>
+          </tr>
+          <tr>
+            <td><code>README.md</code></td>
+            <td>No existe</td>
+            <td>Agregado en la rama</td>
+          </tr>
+          <tr>
+            <td><code>AGENTS.md</code></td>
+            <td>No existe</td>
+            <td>Agregado en la rama</td>
+          </tr>
+          <tr>
+            <td><code>test/</code></td>
+            <td>Presente, con 9 archivos de pruebas</td>
+            <td>Sin cambios respecto de <code>main</code></td>
+          </tr>
+          <tr>
+            <td><code>casos/</code>, <code>docs/</code></td>
+            <td>Presentes</td>
+            <td>Sin cambios</td>
+          </tr>
+          <tr>
+            <td><code>package.json</code>, <code>package-lock.json</code>, <code>tsconfig.json</code></td>
+            <td>Presentes</td>
+            <td>Sin cambios</td>
+          </tr>
+          <tr>
+            <td>Estado de las pruebas</td>
+            <td>El <code>README.md</code> de la entrega indica que el material base llegó sin <code>src/</code> y con las pruebas en rojo</td>
+            <td>34 de 34 pruebas aprobadas en la verificación de este informe</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>La separación anterior es importante: el material base aporta el escenario, las pruebas y la configuración; la rama de trabajo agrega la implementación de <code>src/</code> y la documentación de entrega. El diff entre <code>main</code> y <code>feat/agenda-hexagonal</code> no modifica ningún archivo de <code>test/</code>.</p>
+
+      <h3>2.5 Nota de trazabilidad</h3>
+      <p>El historial de commits disponible está firmado por el usuario <code>Deyner3267</code>. El repositorio no documenta aportes individuales de los demás integrantes, por lo que este informe no atribuye partes del código a una persona específica. Los nombres de los integrantes se incluyen en la portada porque así fueron indicados para el laboratorio, no como una afirmación sobre autoría individual.</p>
+      <p>Tampoco se afirman reuniones, cronogramas o actividades de equipo que no estén registrados en las fuentes consultadas.</p>
+    </section>
+
+    <section id="arquitectura">
+      <h2>3. Arquitectura hexagonal del proyecto</h2>
+
+      <h3>3.1 Idea central</h3>
+      <p>La arquitectura hexagonal, también llamada de puertos y adaptadores, organiza el sistema alrededor de un núcleo con las reglas de negocio. El núcleo no depende de la base de datos, del framework web ni del sistema de archivos. Se comunica con el exterior mediante puertos, que son contratos, y los adaptadores implementan esos contratos.</p>
+      <p>La dirección de dependencias del proyecto es:</p>
+      <pre><code>infrastructure → application → domain</code></pre>
+      <p>El dominio es la parte más interna y no importa nada de fuera de <code>src/domain/</code>. La aplicación importa del dominio y de sí misma. La infraestructura implementa los puertos y puede depender del dominio y de la aplicación. <code>src/composicion.ts</code> es el único lugar que decide qué adaptador concreto se utiliza.</p>
+
+      <h3>3.2 Mapa de componentes</h3>
+      <pre class="diagram">[CitasController]
+      |
+      +--> [AgendarCita] --+
+      |                    +--> [AgendaRepositorio] &lt;.. [AgendaRepositorioMemoria]
+      +--> [CancelarCita] -+                         &lt;.. [AgendaRepositorioJson]
+                           |
+                           +--> [EventBus] &lt;.. [EventBusMemoria]
+                           |
+                           +--> [GeneradorId] &lt;.. [GeneradorIdSecuencial]
+
+[AgendaRepositorio] --> [Dominio: RangoHorario, Cita, Agenda]
+[AgendarCita] --------&gt; [Dominio]
+[CancelarCita] -------&gt; [Dominio]</pre>
+
+      <h3>3.3 Dominio</h3>
+      <p>El dominio contiene las reglas que no dependen de la persistencia ni de la interfaz.</p>
+      <table>
+        <thead>
+          <tr><th>Archivo</th><th>Responsabilidad</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>src/domain/rango-horario.ts</code></td><td>Objeto de valor que representa un intervalo con inicio y fin, valida que el fin sea posterior al inicio y decide si dos rangos se cruzan.</td></tr>
+          <tr><td><code>src/domain/cita.ts</code></td><td>Entidad que representa una cita con identidad, paciente, rango y estado <code>confirmada</code> o <code>cancelada</code>.</td></tr>
+          <tr><td><code>src/domain/agenda.ts</code></td><td>Agregado que reúne las citas de un médico, rechaza cruces entre citas activas y permite cancelar una cita existente.</td></tr>
+          <tr><td><code>src/domain/errores.ts</code></td><td>Errores de negocio: rango inválido, cita ya cancelada, cruce de horario y cita no encontrada.</td></tr>
+          <tr><td><code>src/domain/agenda-repositorio.ts</code></td><td>Puerto <code>AgendaRepositorio</code>, con las operaciones <code>porMedico</code> y <code>guardar</code>.</td></tr>
+        </tbody>
+      </table>
+      <p>Detalles verificables:</p>
+      <ul>
+        <li><code>RangoHorario</code> guarda milisegundos internamente y devuelve nuevas instancias de <code>Date</code> en sus getters, por lo que no expone sus fechas internas.</li>
+        <li><code>RangoHorario.crear</code> rechaza fechas no finitas y rangos donde <code>fin &lt;= inicio</code>.</li>
+        <li><code>Cita</code> solo puede cancelarse una vez; un segundo intento produce <code>CitaYaCanceladaError</code>.</li>
+        <li><code>Agenda.agendar</code> revisa únicamente las citas activas; una cita cancelada no bloquea el horario.</li>
+        <li><code>Agenda.citas()</code> devuelve una copia del arreglo para que un cambio externo no altere el estado interno.</li>
+      </ul>
+
+      <h3>3.4 Aplicación</h3>
+      <p>La aplicación contiene los casos de uso y los puertos que el núcleo necesita para hablar con el exterior.</p>
+      <table>
+        <thead>
+          <tr><th>Archivo</th><th>Responsabilidad</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>src/application/agendar-cita.ts</code></td><td>Caso de uso <code>AgendarCita</code>, con el comando <code>ComandoAgendarCita</code>.</td></tr>
+          <tr><td><code>src/application/cancelar-cita.ts</code></td><td>Caso de uso <code>CancelarCita</code>, con el comando <code>ComandoCancelarCita</code>.</td></tr>
+          <tr><td><code>src/application/puertos.ts</code></td><td>Puertos <code>EventBus</code> y <code>GeneradorId</code>.</td></tr>
+        </tbody>
+      </table>
+      <p><code>AgendarCita</code> depende de tres contratos: <code>AgendaRepositorio</code>, <code>EventBus</code> y <code>GeneradorId</code>. <code>CancelarCita</code> depende de <code>AgendaRepositorio</code> y <code>EventBus</code>. Ninguno de los dos importa una clase concreta de infraestructura.</p>
+
+      <h3>3.5 Puertos</h3>
+      <table>
+        <thead>
+          <tr><th>Puerto</th><th>Ubicación</th><th>Operaciones</th><th>Implementaciones</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>AgendaRepositorio</code></td><td><code>src/domain/agenda-repositorio.ts</code></td><td><code>porMedico(medicoId)</code>, <code>guardar(agenda)</code></td><td><code>AgendaRepositorioMemoria</code>, <code>AgendaRepositorioJson</code></td></tr>
+          <tr><td><code>EventBus</code></td><td><code>src/application/puertos.ts</code></td><td><code>emit(nombre, datos)</code></td><td><code>EventBusMemoria</code></td></tr>
+          <tr><td><code>GeneradorId</code></td><td><code>src/application/puertos.ts</code></td><td><code>nuevo()</code></td><td><code>GeneradorIdSecuencial</code></td></tr>
+        </tbody>
+      </table>
+      <p><code>AgendaRepositorio</code> se ubica en el dominio porque expresa una necesidad del núcleo: recuperar y guardar agendas. <code>EventBus</code> y <code>GeneradorId</code> se ubican en la aplicación porque son necesidades de coordinación de los casos de uso.</p>
+
+      <h3>3.6 Adaptadores</h3>
+      <table>
+        <thead>
+          <tr><th>Adaptador</th><th>Ubicación</th><th>Función</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CitasController</code></td><td><code>src/infrastructure/http/citas-controller.ts</code></td><td>Recibe una solicitud de agendamiento, valida campos y fechas, y traduce errores de dominio a estados HTTP.</td></tr>
+          <tr><td><code>AgendaRepositorioMemoria</code></td><td><code>src/infrastructure/persistence/agenda-repositorio-memoria.ts</code></td><td>Guarda agendas en un <code>Map</code> y devuelve copias.</td></tr>
+          <tr><td><code>AgendaRepositorioJson</code></td><td><code>src/infrastructure/persistence/agenda-repositorio-json.ts</code></td><td>Lee y escribe un archivo JSON, reconstruye citas y rangos.</td></tr>
+          <tr><td><code>EventBusMemoria</code></td><td><code>src/infrastructure/messaging/event-bus-memoria.ts</code></td><td>Acumula los eventos emitidos en un arreglo.</td></tr>
+          <tr><td><code>GeneradorIdSecuencial</code></td><td><code>src/infrastructure/id/generador-id-secuencial.ts</code></td><td>Genera identificadores <code>cita-1</code>, <code>cita-2</code>, etc.</td></tr>
+        </tbody>
+      </table>
+      <p>El controlador HTTP incluido en el material expone el agendamiento mediante <code>post</code>. La cancelación existe como caso de uso y se prueba directamente; el repositorio no incluye un endpoint HTTP de cancelación.</p>
+
+      <h3>3.7 Composición</h3>
+      <p><code>src/composicion.ts</code> define:</p>
+      <pre><code>export type Persistencia =
+  | { tipo: "memoria" }
+  | { tipo: "json"; ruta: string };</code></pre>
+      <p>La función <code>crearApp</code> recibe una opción de persistencia, elige el adaptador correspondiente, construye el bus de eventos y el generador de identificadores, y arma los casos de uso y el controlador. Es el único archivo de <code>src/</code> que importa adaptadores concretos de infraestructura.</p>
+
+      <h3>3.8 Regla de dependencia comprobada</h3>
+      <p><code>test/arquitectura.test.ts</code> funciona como una prueba de aptitud arquitectónica. Comprueba que:</p>
+      <ol>
+        <li>Existe código de dominio y de aplicación para revisar.</li>
+        <li>El dominio no importa nada fuera de <code>src/domain/</code>, ni siquiera módulos de Node.</li>
+        <li>La aplicación solo importa del dominio y de la aplicación.</li>
+        <li>Los adaptadores de una carpeta de infraestructura no importan adaptadores de otra carpeta.</li>
+        <li>Solo <code>composicion.ts</code> decide qué adaptador concreto se usa.</li>
+      </ol>
+      <p>Estas comprobaciones se ejecutan junto con las demás pruebas y forman parte del resultado de 34 de 34 pruebas aprobadas.</p>
+    </section>
+
+    <section id="decisiones">
+      <h2>4. Decisiones de arquitectura y justificación</h2>
+      <p>La siguiente tabla relaciona cada decisión visible en el código con su justificación y su evidencia. No se presentan como actas de reunión ni como alternativas que el equipo haya comparado formalmente, porque el repositorio no documenta esa comparación.</p>
+      <table>
+        <thead>
+          <tr><th>Decisión</th><th>Justificación</th><th>Evidencia</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Mantener el dominio puro</td><td>Las reglas de horarios, citas y agenda pueden probarse sin base de datos, archivos, red ni framework.</td><td><code>src/domain/</code> solo importa archivos de <code>src/domain/</code>; lo vigila <code>test/arquitectura.test.ts</code>.</td></tr>
+          <tr><td>Ubicar <code>AgendaRepositorio</code> en el dominio</td><td>El núcleo define qué necesita para persistir, no al revés.</td><td><code>src/domain/agenda-repositorio.ts</code>.</td></tr>
+          <tr><td>Ubicar <code>EventBus</code> y <code>GeneradorId</code> en la aplicación</td><td>Son necesidades de coordinación de los casos de uso, no reglas del negocio.</td><td><code>src/application/puertos.ts</code>.</td></tr>
+          <tr><td>Hacer que los casos de uso dependan de interfaces</td><td>Permiten sustituir adaptadores y usar dobles de prueba sin cambiar la lógica.</td><td>Constructores de <code>AgendarCita</code> y <code>CancelarCita</code>; <code>test/fakes.ts</code>.</td></tr>
+          <tr><td>Concentrar la elección de adaptadores en <code>composicion.ts</code></td><td>Evita que dominio y aplicación conozcan detalles de persistencia o mensajería.</td><td><code>src/composicion.ts</code>; prueba de arquitectura que prohíbe importar infraestructura desde otras capas.</td></tr>
+          <tr><td>Devolver copias y reconstruir objetos al persistir</td><td>Evita que cambios posteriores en un objeto en memoria modifiquen lo almacenado sin llamar a <code>guardar</code>.</td><td><code>AgendaRepositorioMemoria.copiar</code>; <code>Agenda.citas()</code>; prueba de contrato “cambiar la agenda leída no cambia lo guardado hasta que se guarda”.</td></tr>
+          <tr><td>Modelar el horario como objeto de valor</td><td>La validación y la regla de cruce viven en un único lugar y se reutilizan desde <code>Agenda</code>.</td><td><code>src/domain/rango-horario.ts</code>; pruebas de <code>RangoHorario</code> y <code>Agenda</code>.</td></tr>
+          <tr><td>Usar errores de dominio y traducirlos en el adaptador HTTP</td><td>La lógica de negocio no depende de códigos HTTP.</td><td><code>src/domain/errores.ts</code>; <code>CitasController.post</code> traduce a 400 y 409.</td></tr>
+          <tr><td>Compartir una prueba de contrato entre adaptadores</td><td>Verifica que memoria y JSON ofrecen el mismo comportamiento observable.</td><td><code>test/infraestructura/contrato.ts</code>, ejecutado por <code>contrato-memoria.test.ts</code> y <code>contrato-json.test.ts</code>.</td></tr>
+          <tr><td>Mantener los commits por etapas y no agregar dependencias</td><td>Facilita la revisión y respeta las reglas del repositorio.</td><td>Cuatro commits de implementación y documentación; <code>package.json</code> sin cambios respecto de <code>main</code>.</td></tr>
+        </tbody>
+      </table>
+      <div class="note">Una decisión que no se puede afirmar con las fuentes disponibles es que el equipo haya evaluado y descartado otras arquitecturas. El material no contiene un ADR diligenciado ni una matriz de alternativas. Por eso este informe se limita a justificar las decisiones que el código y el <code>README.md</code> permiten observar.</div>
+    </section>
+
+    <section id="funcionamiento">
+      <h2>5. Funcionamiento de agendar y cancelar citas</h2>
+
+      <h3>5.1 Agendar una cita</h3>
+      <p>El flujo de agendamiento es el siguiente:</p>
+      <ol>
+        <li><code>CitasController.post</code> recibe <code>medicoId</code>, <code>pacienteId</code>, <code>inicio</code> y <code>fin</code>.</li>
+        <li>Si falta algún campo o alguna fecha no se puede interpretar, responde <code>400</code>.</li>
+        <li><code>AgendarCita.ejecutar</code> crea un <code>RangoHorario</code>. Si el fin no es posterior al inicio, se lanza <code>RangoInvalidoError</code> antes de tocar el repositorio.</li>
+        <li>El caso de uso pide la agenda del médico mediante <code>AgendaRepositorio.porMedico</code>.</li>
+        <li>Genera un identificador con <code>GeneradorId.nuevo</code>.</li>
+        <li>Crea una <code>Cita</code> nueva en estado <code>confirmada</code>.</li>
+        <li><code>Agenda.agendar</code> revisa las citas activas. Si encuentra un cruce, lanza <code>CruceDeHorarioError</code> y no agrega la cita.</li>
+        <li>Si no hay cruce, agrega la cita y <code>AgendaRepositorio.guardar</code> persiste la agenda.</li>
+        <li>Se emite el evento <code>cita.confirmada</code> con el identificador de la cita y el médico.</li>
+        <li>El controlador responde <code>201</code> con el identificador; un cruce se traduce a <code>409</code> y un rango inválido a <code>400</code>.</li>
+      </ol>
+
+      <pre class="diagram">CitasController -&gt; AgendarCita: ejecutar(comando)
+AgendarCita -&gt; AgendarCita: RangoHorario.crear(inicio, fin)
+AgendarCita -&gt; AgendaRepositorio: porMedico(medicoId)
+AgendaRepositorio --&gt; AgendarCita: Agenda
+AgendarCita -&gt; Agenda: agendar(Cita.nueva(...))
+alt hay cruce
+  Agenda --&gt; AgendarCita: CruceDeHorarioError
+  AgendarCita --&gt; CitasController: error
+  CitasController --&gt; CitasController: 409
+else no hay cruce
+  AgendarCita -&gt; AgendaRepositorio: guardar(agenda)
+  AgendarCita -&gt; EventBus: emit("cita.confirmada")
+  AgendarCita --&gt; CitasController: citaId
+  CitasController --&gt; CitasController: 201
+end</pre>
+
+      <h3>5.2 Cancelar una cita</h3>
+      <ol>
+        <li><code>CancelarCita.ejecutar</code> recibe <code>medicoId</code> y <code>citaId</code>.</li>
+        <li>Recupera la agenda del médico mediante <code>AgendaRepositorio.porMedico</code>.</li>
+        <li><code>Agenda.cancelar</code> busca la cita por identificador. Si no existe, lanza <code>CitaNoEncontradaError</code>.</li>
+        <li><code>Cita.cancelar</code> verifica que la cita esté activa. Si ya fue cancelada, lanza <code>CitaYaCanceladaError</code>; si está activa, cambia su estado a <code>cancelada</code>.</li>
+        <li>Guarda la agenda y emite el evento <code>cita.cancelada</code>.</li>
+      </ol>
+      <p>La cancelación no elimina la cita del arreglo: cambia su estado. Como <code>Agenda.agendar</code> solo considera citas activas, el horario cancelado queda disponible para una nueva cita. Esto se comprueba en <code>test/dominio/agenda.test.ts</code> y en <code>test/aplicacion/cancelar-cita.test.ts</code>.</p>
+
+      <h3>5.3 Regla que impide cruces de horarios</h3>
+      <p>La regla está en <code>RangoHorario.seCruzaCon</code>:</p>
+      <pre><code>seCruzaCon(otro: RangoHorario): boolean {
+  return this.inicioMs &lt; otro.finMs &amp;&amp; otro.inicioMs &lt; this.finMs;
+}</code></pre>
+      <p>Dos rangos se cruzan si cada uno empieza antes de que termine el otro. Las comparaciones son estrictas, de modo que dos citas contiguas no se consideran un cruce.</p>
+      <table>
+        <thead>
+          <tr><th>Caso</th><th>Rango existente</th><th>Rango nuevo</th><th>Resultado</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Citas contiguas</td><td>09:00–09:30</td><td>09:30–10:00</td><td>Permitido</td></tr>
+          <tr><td>Citas contiguas</td><td>09:00–10:00</td><td>08:00–09:00</td><td>Permitido</td></tr>
+          <tr><td>Solapamiento parcial</td><td>09:00–10:00</td><td>09:30–10:30</td><td>Rechazado</td></tr>
+          <tr><td>Solapamiento parcial</td><td>09:00–10:00</td><td>08:00–09:01</td><td>Rechazado</td></tr>
+        </tbody>
+      </table>
+      <p>Además, <code>Agenda.agendar</code> solo revisa citas activas:</p>
+      <pre><code>if (this.citasAgendadas.some(
+  (existente) =&gt; existente.activa() &amp;&amp; existente.rango.seCruzaCon(cita.rango),
+)) {
+  throw new CruceDeHorarioError();
+}</code></pre>
+      <p>Por eso una cita cancelada libera su franja. Las pruebas de <code>RangoHorario</code> cubren los extremos contiguos y los solapamientos; las pruebas de <code>Agenda</code> cubren el rechazo de una cita que se cruza y la liberación del horario al cancelar.</p>
+    </section>
+
+    <section id="comparacion">
+      <h2>6. Comparación entre los repositorios en memoria y JSON</h2>
+
+      <h3>6.1 Comparación técnica</h3>
+      <table>
+        <thead>
+          <tr><th>Aspecto</th><th><code>AgendaRepositorioMemoria</code></th><th><code>AgendaRepositorioJson</code></th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Almacenamiento</td><td><code>Map&lt;string, Agenda&gt;</code> en memoria</td><td>Archivo JSON en la ruta indicada</td></tr>
+          <tr><td>Lectura</td><td><code>Map.get</code> y copia profunda de la agenda</td><td><code>readFile</code>, <code>JSON.parse</code> y reconstrucción de citas</td></tr>
+          <tr><td>Escritura</td><td><code>Map.set</code> con una copia profunda</td><td>Lectura del archivo, actualización de las citas del médico y <code>writeFile</code></td></tr>
+          <tr><td>Persistencia tras reiniciar</td><td>No: se pierde al terminar el proceso</td><td>Sí: queda en el archivo</td></tr>
+          <tr><td>Dependencias</td><td>Solo tipos y clases del dominio</td><td><code>node:fs/promises</code>, <code>node:path</code> y el dominio</td></tr>
+          <tr><td>Fechas</td><td>Se conservan como <code>Date</code> dentro del objeto</td><td>Se serializan como cadenas ISO y se reconstruyen como <code>Date</code></td></tr>
+          <tr><td>Archivo inexistente</td><td>No aplica</td><td>Se interpreta como un conjunto vacío de agendas</td></tr>
+          <tr><td>Aislamiento</td><td>Copia las citas con <code>Cita.reconstruir</code> y nuevos <code>RangoHorario</code></td><td>La serialización y deserialización crean objetos nuevos</td></tr>
+        </tbody>
+      </table>
+
+      <h3>6.2 Por qué cambiar el adaptador no exige modificar <code>Agenda</code> ni <code>AgendarCita</code></h3>
+      <p><code>AgendarCita</code> recibe una dependencia tipada como <code>AgendaRepositorio</code>:</p>
+      <pre><code>constructor(
+  private readonly agendas: AgendaRepositorio,
+  private readonly eventos: EventBus,
+  private readonly ids: GeneradorId,
+) {}</code></pre>
+      <p>El caso de uso solo conoce las operaciones <code>porMedico</code> y <code>guardar</code>. No importa <code>AgendaRepositorioMemoria</code> ni <code>AgendaRepositorioJson</code>. <code>Agenda</code>, por su parte, es una clase de dominio y no importa ningún adaptador.</p>
+      <p>La elección concreta se hace en <code>composicion.ts</code>:</p>
+      <pre><code>const agendas: AgendaRepositorio = persistencia.tipo === "memoria"
+  ? new AgendaRepositorioMemoria()
+  : new AgendaRepositorioJson(persistencia.ruta);</code></pre>
+      <p>Así, cambiar de memoria a JSON consiste en cambiar la opción que recibe <code>crearApp</code>:</p>
+      <pre><code>crearApp({ tipo: "memoria" });
+crearApp({ tipo: "json", ruta: "datos/agendas.json" });</code></pre>
+      <p>El código de <code>Agenda</code> y de <code>AgendarCita</code> no cambia porque ambos dependen del contrato, no de la implementación. Esta es una aplicación de inversión de dependencias: el núcleo define el puerto y la infraestructura lo implementa.</p>
+      <p>La prueba de arquitectura refuerza la separación: dominio y aplicación no pueden importar <code>infrastructure</code>, y solo <code>composicion.ts</code> puede elegir el adaptador. La prueba de intercambio (<code>test/infraestructura/intercambio.test.ts</code>) ejecuta el mismo escenario con memoria y con JSON, y obtiene los mismos estados HTTP, la misma agenda y el mismo evento. Las pruebas de contrato (<code>test/infraestructura/contrato.ts</code>) aplican la misma batería a ambos adaptadores.</p>
+
+      <h3>6.3 Diferencias observables y límites</h3>
+      <ul>
+        <li>La memoria es más simple y no requiere archivos, pero pierde los datos al reiniciar.</li>
+        <li>JSON permite conservar los datos entre ejecuciones, a cambio de lectura y escritura de archivo en cada operación.</li>
+        <li>El adaptador JSON reescribe el archivo completo en cada <code>guardar</code>; no se observa un mecanismo de bloqueo o control de concurrencia.</li>
+        <li>Ambos adaptadores cumplen el mismo contrato observable, que es lo que permite sustituirlos sin tocar el dominio ni los casos de uso.</li>
+      </ul>
+    </section>
+
+    <section id="verificacion">
+      <h2>7. Verificación</h2>
+
+      <h3>7.1 Comandos ejecutados</h3>
+      <p>La verificación se realizó sobre una copia temporal de la rama <code>feat/agenda-hexagonal</code>, después de instalar las dependencias con <code>npm install</code>. No se modificaron las pruebas ni el código original.</p>
+      <table>
+        <thead>
+          <tr><th>Comando</th><th>Resultado obtenido</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>npm test</code></td><td>9 archivos de prueba aprobados; 34 de 34 pruebas aprobadas</td></tr>
+          <tr><td><code>npm run typecheck</code></td><td>Sin errores; finalizó con código de salida 0</td></tr>
+          <tr><td><code>git diff main..feat/agenda-hexagonal -- test</code></td><td>Sin diferencias: las pruebas no se modificaron</td></tr>
+        </tbody>
+      </table>
+      <p>Entorno de ejecución: Node.js v24.19.0 y npm 11.17.0. El proyecto declara Node.js 20 o superior en <code>package.json</code>.</p>
+
+      <h3>7.2 Detalle de las pruebas</h3>
+      <table>
+        <thead>
+          <tr><th>Archivo</th><th>Pruebas aprobadas</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>test/arquitectura.test.ts</code></td><td>5</td></tr>
+          <tr><td><code>test/dominio/rango-horario.test.ts</code></td><td>6</td></tr>
+          <tr><td><code>test/dominio/cita.test.ts</code></td><td>3</td></tr>
+          <tr><td><code>test/dominio/agenda.test.ts</code></td><td>5</td></tr>
+          <tr><td><code>test/aplicacion/agendar-cita.test.ts</code></td><td>4</td></tr>
+          <tr><td><code>test/aplicacion/cancelar-cita.test.ts</code></td><td>1</td></tr>
+          <tr><td><code>test/infraestructura/contrato-memoria.test.ts</code></td><td>4</td></tr>
+          <tr><td><code>test/infraestructura/contrato-json.test.ts</code></td><td>4</td></tr>
+          <tr><td><code>test/infraestructura/intercambio.test.ts</code></td><td>2</td></tr>
+          <tr><td><strong>Total</strong></td><td><strong>34</strong></td></tr>
+        </tbody>
+      </table>
+
+      <h3>7.3 Resultado reportado y resultado verificado</h3>
+      <p>El <code>README.md</code> de la rama y el cuerpo del pull request reportan 34 de 34 pruebas aprobadas y typecheck sin errores. Esos resultados no se tomaron como propios: para este informe se ejecutaron los comandos en una copia independiente y se obtuvo el mismo resultado.</p>
+      <p>La verificación confirma el comportamiento descrito, pero no convierte el laboratorio en un sistema productivo. Se trata de un ejercicio académico con persistencia simulada y sin integraciones reales.</p>
+    </section>
+
+    <section id="revision">
+      <h2>8. Revisión de código</h2>
+      <p>En el pull request número 1 constan tres comentarios de revisión publicados. La consulta a la API de GitHub los devuelve como comentarios de revisión, no como comentarios generales del issue. Fueron escritos por el usuario <code>Deyner3267</code>; no fueron realizados por quien elabora este informe.</p>
+      <table>
+        <thead>
+          <tr><th>#</th><th>Archivo y línea</th><th>Resumen del comentario</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td><code>src/domain/rango-horario.ts:31</code></td><td>Revisa la condición de cruce: ahora permite citas consecutivas sin que se crucen y rechaza las que comparten parte del horario.</td></tr>
+          <tr><td>2</td><td><code>src/infrastructure/persistence/agenda-repositorio-memoria.ts:15</code></td><td>Al guardar una copia de la agenda se evita que cambios posteriores en el objeto original modifiquen los datos almacenados sin llamar otra vez a <code>guardar</code>.</td></tr>
+          <tr><td>3</td><td><code>src/composicion.ts:13</code></td><td>La elección entre memoria y JSON está concentrada en <code>composicion.ts</code>; ambos implementan <code>AgendaRepositorio</code>, así que <code>AgendarCita</code> y <code>Agenda</code> no necesitan cambiar al sustituir el almacenamiento.</td></tr>
+        </tbody>
+      </table>
+      <p>Los tres comentarios se publicaron el 14 de noviembre de 2026. El cuerpo del pull request todavía dice que los comentarios debían realizarse; sin embargo, la API confirma que ya están publicados. Esa diferencia es una desactualización del texto del PR, no una ausencia de los comentarios.</p>
+      <p>Los comentarios se relacionan directamente con tres puntos centrales del laboratorio:</p>
+      <ol>
+        <li>La regla de cruces y los horarios contiguos.</li>
+        <li>El aislamiento del estado en el repositorio de memoria.</li>
+        <li>La sustitución de persistencia mediante la composición.</li>
+      </ol>
+    </section>
+
+    <section id="conclusiones">
+      <h2>9. Conclusiones y enlaces</h2>
+
+      <h3>9.1 Conclusiones</h3>
+      <ul>
+        <li>La implementación separa las reglas de negocio en <code>src/domain/</code>, la coordinación en <code>src/application/</code>, los detalles técnicos en <code>src/infrastructure/</code> y el armado en <code>src/composicion.ts</code>.</li>
+        <li>La regla de cruces permite citas contiguas y rechaza intervalos que comparten tiempo. La cancelación cambia el estado de la cita y libera el horario porque las citas canceladas no se consideran activas.</li>
+        <li>Memoria y JSON implementan el mismo puerto <code>AgendaRepositorio</code>. Cambiar de uno a otro solo requiere ajustar la composición; <code>Agenda</code> y <code>AgendarCita</code> no necesitan modificarse.</li>
+        <li>La verificación ejecutada para este informe dio 34 de 34 pruebas aprobadas en 9 archivos y typecheck sin errores.</li>
+        <li>Las pruebas originales no se modificaron: el diff entre <code>main</code> y la rama de trabajo no contiene cambios en <code>test/</code>.</li>
+        <li>El pull request está abierto y no fusionado al momento de la consulta. Los tres comentarios de revisión están publicados, aunque el cuerpo del PR no se haya actualizado.</li>
+        <li>El laboratorio es un ejemplo académico: no hay base de datos real, correo real, autenticación, interfaz gráfica ni control de concurrencia. Estas ausencias delimitan el alcance de las conclusiones.</li>
+      </ul>
+
+      <h3>9.2 Enlaces</h3>
+      <ul>
+        <li>Repositorio público: <a href="https://github.com/Deyner3267/Laboratorio-SaludYa">https://github.com/Deyner3267/Laboratorio-SaludYa</a></li>
+        <li>Rama de la implementación: <a href="https://github.com/Deyner3267/Laboratorio-SaludYa/tree/feat/agenda-hexagonal">https://github.com/Deyner3267/Laboratorio-SaludYa/tree/feat/agenda-hexagonal</a></li>
+        <li>Pull request de entrega: <a href="https://github.com/Deyner3267/Laboratorio-SaludYa/pull/1">https://github.com/Deyner3267/Laboratorio-SaludYa/pull/1</a></li>
+      </ul>
+    </section>
+
+    <p class="footer-note"><strong>Nota final:</strong> este informe se basa en el estado del repositorio y del pull request consultados el 14 de noviembre de 2026. Los espacios de institución, asignatura y fecha de la portada quedan pendientes de completar.</p>
+  </main>
+</body>
+</html>
